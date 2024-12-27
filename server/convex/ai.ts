@@ -7,7 +7,7 @@ import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import { internal } from "./_generated/api";
-import { action } from "./_generated/server";
+import { action, internalAction } from "./_generated/server";
 const { Jimp } = require("jimp");
 const probe = require("probe-image-size");
 
@@ -59,7 +59,7 @@ export const scanImage = action({
 	},
 });
 
-export const getRecipes = action({
+export const getRecipes = internalAction({
 	args: {
 		collectionId: v.id("collections"),
 	},
@@ -100,12 +100,13 @@ export const getRecipes = action({
 
 			console.log("starting dish image generation...");
 			for (const recipe of recipes) {
-				const storageId = await generateDishImage(
-					recipe.title,
-					ctx.storage
-				);
-				if (storageId) recipe.storageId = storageId;
-				else recipe.storageId = undefined;
+				// const storageId = await generateDishImage(
+				// 	recipe.title,
+				// 	ctx.storage
+				// );
+				// if (storageId) recipe.storageId = storageId;
+				// else
+				recipe.storageId = undefined;
 
 				recipe.saved = false;
 				recipe.collectionId = args.collectionId;

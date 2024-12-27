@@ -1,29 +1,30 @@
 import SwiftUI
 import ConvexMobile
 
-let convex = ConvexClient(deploymentUrl: Bundle.main.infoDictionary?["CONVEX_URL"] as? String ?? "")
+let convex: ConvexClient = {
+    guard let url = Bundle.main.infoDictionary?["CONVEX_URL"] as? String,
+          !url.isEmpty else {
+        fatalError("Missing CONVEX_URL")
+    }
+    return ConvexClient(deploymentUrl: url)
+}()
 
 struct ContentView: View {
     @State private var items: [PantryItem] = []
-    @State private var currentTab = "Pantry"
-
+    @State private var collections: [RecipeCollection] = []
+    
     var body: some View {
         ZStack {
-            TabView(selection: $currentTab) {
+            TabView {
                 PantryView(items: items)
                     .tabItem {
                         Label("Pantry", systemImage: "cabinet")
                     }
-                    .tag("Pantry")
                 
-                
-                NavigationStack {
-                    MenuView()
-                }
+                MenuListView(collections: collections)
                 .tabItem {
                     Label("Menu", systemImage: "fork.knife")
                 }
-                .tag("Menu")
                 
                 NavigationStack {
                     CookbookView()
@@ -31,38 +32,7 @@ struct ContentView: View {
                 .tabItem {
                     Label("Cookbook", systemImage: "book")
                 }
-                .tag("Cookbook")
-                
             }
-            VStack {
-                Spacer()
-                Button {
-                    withAnimation(.easeInOut) {
-                        currentTab = "Menu"
-                    }
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill(.black)
-                            .frame(width: currentTab != "Menu" ? 103 : 100, height: currentTab != "Menu" ? 103 : 100)
-                            .offset(y: currentTab == "Menu" ? 0 : 4)
-                        Circle()
-                            .stroke(.black, lineWidth: 2)
-                            .fill(.blue)
-                            .frame(width: 100, height: 100)
-                        VStack {
-                            Image(systemName: "fork.knife")
-                                .font(.system(size: 24, weight: .bold))
-                            Text("Menu")
-                                .font(.subheadline)
-                        }
-                        .foregroundStyle(.white)
-                    }
-                }
-                .offset(y: currentTab == "Menu" ? 10 : 5)
-                .animation(.spring(response: 0.3, dampingFraction: 0.8), value: currentTab)
-            }
-            .allowsHitTesting(false)
         }
         .task {
             for await items: [PantryItem] in convex.subscribe(to: "items:get")
@@ -71,7 +41,13 @@ struct ContentView: View {
                 self.items = items
             }
         }
-        
+        .task {
+            for await collections: [RecipeCollection] in convex.subscribe(to: "recipes:getCollections")
+                .replaceError(with: []).values
+            {
+                self.collections = collections
+            }
+        }
     }
 }
 

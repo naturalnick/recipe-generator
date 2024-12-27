@@ -43,7 +43,23 @@ struct RecipeCard: View {
             .foregroundStyle(.black)
             .padding(.top, 8)
             .padding(.horizontal)
+            
             Spacer()
+            if let dietary = recipe.dietary {
+                HStack {
+                    Spacer()
+                    ForEach(dietary, id: \.self) { dietary in
+                        ZStack {
+                            Image(systemName: "seal.fill")
+                                .font(.system(size: 24))
+                                .foregroundStyle(dietary.color())
+                            Text(dietary.label())
+                                .font(.system(size: dietary == DietaryLabel.vegetarian ? 9 : 10, weight: .bold))
+                        }
+                    }
+                }
+                .padding()
+            }
             
         }
         .frame(width: UIScreen.main.bounds.width / 1.7)
@@ -73,6 +89,6 @@ struct RecipeImagePlaceholder: View {
 }
 
 #Preview {
-    RecipeCard(recipe: Recipe(storageId: nil, collectionId: nil, imageUrl: nil, title: "Hummus", ingredients: [Ingredient(id: "1", name: "Garbanzo Beans", amount: "2", unit: "cups"),Ingredient(id: "2", name: "Tahini", amount: "0.5", unit: "cup")], instructions: ["Add all ingredients to blender.","Blend until smooth.","Serve with pita bread."], saved: nil, estimatedTime: nil), isLoadButtonVisible: .constant(false))
+    RecipeCard(recipe: Recipe(storageId: nil, collectionId: nil, imageUrl: nil, title: "Hummus", ingredients: [Ingredient(id: "1", name: "Garbanzo Beans", amount: "2", unit: "cups"),Ingredient(id: "2", name: "Tahini", amount: "0.5", unit: "cup")], instructions: ["Add all ingredients to blender.","Blend until smooth.","Serve with pita bread."], saved: nil, estimatedTime: nil, dietary: [.glutenFree, .dairyFree, .vegan, .vegetarian]), isLoadButtonVisible: .constant(false))
         .frame(height: 400)
 }

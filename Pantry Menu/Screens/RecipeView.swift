@@ -124,5 +124,5 @@ struct RecipeView: View {
 }
 
 #Preview {
-    RecipeView(recipe: Recipe(storageId: nil, collectionId: nil, imageUrl: nil, title: "Hummus", ingredients: [Ingredient(id: "1", name: "Garbanzo Beans", amount: "2", unit: "cups"),Ingredient(id: "2", name: "Tahini", amount: "0.5", unit: "cup")], instructions: ["Add all ingredients to blender.","Blend until smooth.","Serve with pita bread."], saved: nil, estimatedTime: nil))
+    RecipeView(recipe: Recipe(storageId: nil, collectionId: nil, imageUrl: nil, title: "Hummus", ingredients: [Ingredient(id: "1", name: "Garbanzo Beans", amount: "2", unit: "cups"),Ingredient(id: "2", name: "Tahini", amount: "0.5", unit: "cup")], instructions: ["Add all ingredients to blender.","Blend until smooth.","Serve with pita bread."], saved: nil, estimatedTime: nil, dietary: [.glutenFree]))
 }

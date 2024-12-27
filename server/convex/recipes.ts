@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { internalMutation, mutation, query } from "./_generated/server";
 
@@ -24,6 +25,7 @@ export const get = query({
 
 const recipe = v.object({
 	storageId: v.optional(v.id("_storage")),
+	collectionId: v.optional(v.id("collections")),
 	title: v.string(),
 	ingredients: v.array(
 		v.object({
@@ -51,6 +53,24 @@ export const create = mutation({
 	},
 });
 
+export const getCollection = query({
+	args: {
+		id: v.id("collections"),
+	},
+	handler: async (ctx, args) => {
+		const collection = await ctx.db.get(args.id);
+		const recipes = await ctx.db
+			.query("recipes")
+			.filter((q) => q.eq(q.field("collectionId"), args.id))
+			.collect();
+		console.log(recipes.length);
+		return {
+			collection,
+			recipes,
+		};
+	},
+});
+
 export const getCollections = query({
 	args: {},
 	handler: async (ctx) => {
@@ -73,6 +93,13 @@ export const createCollection = mutation({
 		const id = await ctx.db.insert("collections", {
 			...args.collection,
 		});
+
+		console.log("before getRecipes");
+		await ctx.scheduler.runAfter(0, internal.ai.getRecipes, {
+			collectionId: id,
+		});
+		console.log("after getRecipes");
+
 		return id;
 	},
 });
