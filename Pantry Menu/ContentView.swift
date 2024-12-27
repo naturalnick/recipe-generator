@@ -1,61 +1,80 @@
-//
-//  ContentView.swift
-//  Pantry Menu
-//
-//  Created by Nick Schaefer on 12/22/24.
-//
-
 import SwiftUI
-import SwiftData
+import ConvexMobile
+
+let convex = ConvexClient(deploymentUrl: Bundle.main.infoDictionary?["CONVEX_URL"] as? String ?? "")
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+    @State private var items: [PantryItem] = []
+    @State private var currentTab = "Pantry"
 
     var body: some View {
-        NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
+        ZStack {
+            TabView(selection: $currentTab) {
+                PantryView(items: items)
+                    .tabItem {
+                        Label("Pantry", systemImage: "cabinet")
+                    }
+                    .tag("Pantry")
+                
+                
+                NavigationStack {
+                    MenuView()
+                }
+                .tabItem {
+                    Label("Menu", systemImage: "fork.knife")
+                }
+                .tag("Menu")
+                
+                NavigationStack {
+                    CookbookView()
+                }
+                .tabItem {
+                    Label("Cookbook", systemImage: "book")
+                }
+                .tag("Cookbook")
+                
+            }
+            VStack {
+                Spacer()
+                Button {
+                    withAnimation(.easeInOut) {
+                        currentTab = "Menu"
+                    }
+                } label: {
+                    ZStack {
+                        Circle()
+                            .fill(.black)
+                            .frame(width: currentTab != "Menu" ? 103 : 100, height: currentTab != "Menu" ? 103 : 100)
+                            .offset(y: currentTab == "Menu" ? 0 : 4)
+                        Circle()
+                            .stroke(.black, lineWidth: 2)
+                            .fill(.blue)
+                            .frame(width: 100, height: 100)
+                        VStack {
+                            Image(systemName: "fork.knife")
+                                .font(.system(size: 24, weight: .bold))
+                            Text("Menu")
+                                .font(.subheadline)
+                        }
+                        .foregroundStyle(.white)
                     }
                 }
-                .onDelete(perform: deleteItems)
+                .offset(y: currentTab == "Menu" ? 10 : 5)
+                .animation(.spring(response: 0.3, dampingFraction: 0.8), value: currentTab)
             }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
-            }
-        } detail: {
-            Text("Select an item")
+            .allowsHitTesting(false)
         }
-    }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
+        .task {
+            for await items: [PantryItem] in convex.subscribe(to: "items:get")
+                .replaceError(with: []).values
+            {
+                self.items = items
             }
         }
+        
     }
 }
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
 }
