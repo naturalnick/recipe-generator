@@ -18,23 +18,27 @@ struct MenuListView: View {
     @State private var isLoading = false
     @State private var path = NavigationPath()
     
+    private func generateRecipeCollection() {
+        Task {
+            do {
+                isLoading = true
+                let collection = RecipeCollection(mealType: .breakfast, isSavory: false, servingSize: 2, dietary: [.dairyFree])
+                let collectionId: String = try await convex.mutation("recipes:createCollection", with: ["collection": collection])
+                path.append(collectionId)
+                isLoading = false
+            } catch {
+                print(error)
+            }
+        }
+    }
+    
     var body: some View {
         NavigationStack(path: $path) {
             VStack {
                 VStack {
-                    Button(action: {
-                        Task {
-                            do {
-                                isLoading = true
-                                let collection = RecipeCollection(mealType: .breakfast, isSavory: false, servingSize: 2, dietary: [.dairyFree])
-                                let collectionId: String = try await convex.mutation("recipes:createCollection", with: ["collection": collection])
-                                path.append(collectionId)
-                                isLoading = false
-                            } catch {
-                                print(error)
-                            }
-                        }
-                    }) {
+                    Button {
+                        
+                    } label: {
                         Text(!isLoading ? "New Menu" : "Loading...")
                             .font(.title)
                             .frame(maxWidth: .infinity)
@@ -73,6 +77,9 @@ struct MenuListView: View {
             }
             .navigationDestination(for: String.self) { collectionId in
                 MenuView(collectionId: collectionId)
+            }
+            .fullScreenCover(isPresented: $isMenuSheetVisible) {
+                MenuGuide()
             }
         }
     }

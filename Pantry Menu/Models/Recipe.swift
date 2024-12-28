@@ -57,12 +57,14 @@ struct RecipeCollection: Codable, Hashable, ConvexEncodable {
     }
 }
 
-enum MealType: String, Codable {
+enum MealType: String, Codable, CaseIterable {
     case breakfast
     case lunch
     case dinner
     case snack
     case dessert
+    
+    var id: Self { self }
     
     func canBeSweet() -> Bool {
         switch self {
@@ -74,7 +76,7 @@ enum MealType: String, Codable {
     }
 }
 
-enum DietaryLabel: String, Codable {
+enum DietaryLabel: String, Codable, CaseIterable {
     case glutenFree = "Gluten-Free"
     case dairyFree = "Dairy-Free"
     case vegan = "Vegan"
